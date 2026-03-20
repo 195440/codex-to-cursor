@@ -1,0 +1,34 @@
+{
+  "name": "codex-to-cursor",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0",
+  "author": "195440",
+  "description": "将 Codex Chat Completions 上游桥接为 Cursor 可用的 /v1/responses（OpenAI Responses 形态）。",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/src/index.js",
+    "test": "tsx --test test/**/*.test.ts",
+    "pm2:start": "pm2 start ecosystem.config.cjs --env production",
+    "pm2:restart": "pm2 restart ecosystem.config.cjs --only codex-to-cursor --update-env",
+    "pm2:stop": "pm2 stop codex-to-cursor",
+    "pm2:delete": "pm2 delete codex-to-cursor",
+    "pm2:logs": "pm2 logs codex-to-cursor",
+    "pm2:status": "pm2 status codex-to-cursor",
+    "pm2:save": "pm2 save"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "fastify": "^5.6.1",
+    "pm2": "^6.0.14"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  }
+}
