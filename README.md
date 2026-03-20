@@ -58,7 +58,16 @@ npm run start
 
 ## Cursor 侧配置思路
 
-将 Cursor 的 OpenAI 兼容 **Base URL** 设为本服务地址（例如 `http://127.0.0.1:3060`），并配置与 Sub2API 一致的 **API Key**（或通过请求头由本服务转发）。若配置项中有 **Wire API / API 形态** 等选项，可按需选择 **Responses**（走 `POST /v1/responses`）或 **Chat Completions**（走 `POST /v1/chat/completions`）；本服务在 `/healthz` 中仍会报告 `wire_api: "responses"`，表示对 Responses 线路的适配能力。
+将 Cursor 的 OpenAI 兼容 **Base URL** 设为本服务地址，**这里要带上 `/v1`**（例如 `http://127.0.0.1:3060/v1`），并配置与 Sub2API 一致的 **API Key**（或通过请求头由本服务转发）。可直接理解为：**Cursor 侧填的是本服务的接口前缀，所以要写成带 `/v1` 的地址；上游 `OPENAI_BASE_URL` / `UPSTREAM_BASE_URL` 则仍然不要带 `/v1`。**
+
+若配置项中有 **Wire API / API 形态** 等选项，可按需选择 **Responses**（走 `POST /v1/responses`）或 **Chat Completions**（走 `POST /v1/chat/completions`）；本服务在 `/healthz` 中仍会报告 `wire_api: "responses"`，表示对 Responses 线路的适配能力。
+
+若使用 **`gpt-5.4`**，可优先按下面的经验选择请求形式：
+
+- **第一种：`/responses`**
+  兼容 Cursor 新版常见调用方式，但**可能存在不支持图片**的情况。
+- **第二种：`/v1/chat/completions`**
+  对 **`gpt-5.4`** 来说通常**支持图片输入**，但**可能存在限流**，实际可用性取决于你的上游网关与账号状态。
 
 具体 UI 名称以 Cursor 版本为准；核心是：**客户端无论打上述哪条路径，最终都由本服务对接上游 Chat Completions**。
 
