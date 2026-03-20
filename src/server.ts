@@ -18,12 +18,43 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
     logger: {
       level: options.config.logLevel,
     },
-    bodyLimit: 2 * 1024 * 1024,
+    bodyLimit: options.config.bodyLimitBytes,
+  });
+
+  app.addHook("onRequest", async (request) => {
+    request.log.info(
+      {
+        requestId: request.id,
+        method: request.method,
+        url: request.url,
+        host: request.headers.host,
+        userAgent: request.headers["user-agent"],
+        contentType: request.headers["content-type"],
+        contentLength: request.headers["content-length"],
+        accept: request.headers.accept,
+        hasAuthorizationHeader: Boolean(request.headers.authorization),
+      },
+      "incoming request",
+    );
+  });
+
+  app.addHook("onResponse", async (request, reply) => {
+    request.log.info(
+      {
+        requestId: request.id,
+        method: request.method,
+        url: request.url,
+        statusCode: reply.statusCode,
+        responseContentType: reply.getHeader("content-type"),
+      },
+      "completed request",
+    );
   });
 
   const upstream = new OpenAiUpstreamClient({
     baseUrl: options.config.openAiBaseUrl,
     fallbackApiKey: options.config.openAiApiKey,
+    userAgent: options.config.upstreamUserAgent,
     fetchImpl: options.fetchImpl,
     logger: app.log,
   });

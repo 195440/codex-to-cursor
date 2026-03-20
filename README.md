@@ -29,6 +29,7 @@
 - **监听端口**：`3060`（可用环境变量修改）
 - **上游地址**：`OPENAI_BASE_URL` 或 `UPSTREAM_BASE_URL`（未设置时保留代码内默认示例地址，**部署请务必改成你的 Sub2API 或 Codex 网关地址**）
 - **鉴权**：若请求带有 `Authorization` 头则原样转发；否则使用环境变量 `OPENAI_API_KEY`
+- **上游 User-Agent**：默认使用 `codex-tui` 样式 UA，可通过 `UPSTREAM_USER_AGENT` 覆盖
 - **Wire API**：对外表现为 **responses**（健康检查 `GET /healthz` 会返回 `wire_api: "responses"`）
 - **状态**：`previous_response_id` 等多轮上下文依赖进程内内存；多实例部署时需保持单实例或使用外部状态方案（见 PM2 说明）
 
@@ -51,6 +52,8 @@ npm run start
 | `UPSTREAM_BASE_URL` | 与 `OPENAI_BASE_URL` 二选一，后者优先 |
 | `OPENAI_API_KEY` | 上游 API Key；请求未带 `Authorization` 时使用 |
 | `STATE_TTL_SECONDS` | 内存中对话状态保留时间，默认 `86400` |
+| `BODY_LIMIT_MB` | 单个请求体大小上限，默认 `20` |
+| `UPSTREAM_USER_AGENT` | 转发到上游时携带的 `User-Agent`，未设置时使用内置默认值 |
 | `LOG_LEVEL` | 日志级别，默认 `debug` |
 
 ## Cursor 侧配置思路

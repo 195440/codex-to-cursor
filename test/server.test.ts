@@ -1,7 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { DEFAULT_UPSTREAM_USER_AGENT } from "../src/config";
 import { buildApp } from "../src/server";
 import { MemoryResponseStateStore } from "../src/store";
+
+function getHeaderValue(headers: HeadersInit | undefined, key: string): string | undefined {
+  if (!headers) {
+    return undefined;
+  }
+  if (headers instanceof Headers) {
+    return headers.get(key) ?? undefined;
+  }
+  if (Array.isArray(headers)) {
+    const match = headers.find(([name]) => name.toLowerCase() === key.toLowerCase());
+    return match?.[1];
+  }
+  const headerRecord = headers as Record<string, string>;
+  for (const [name, value] of Object.entries(headerRecord)) {
+    if (name.toLowerCase() === key.toLowerCase()) {
+      return value;
+    }
+  }
+  return undefined;
+}
 
 test("replays previous_response_id history without inheriting old instructions", async () => {
   const upstreamBodies: unknown[] = [];
@@ -44,6 +65,8 @@ test("replays previous_response_id history without inheriting old instructions",
       openAiBaseUrl: "http://openclaw.195440.com:3030",
       openAiApiKey: "test-key",
       stateTtlSeconds: 86400,
+      bodyLimitBytes: 20 * 1024 * 1024,
+      upstreamUserAgent: DEFAULT_UPSTREAM_USER_AGENT,
       logLevel: "silent",
     },
     store: new MemoryResponseStateStore(),
@@ -99,8 +122,10 @@ test("replays previous_response_id history without inheriting old instructions",
 
 test("translates responses-style input on /v1/chat/completions into upstream messages", async () => {
   const upstreamBodies: unknown[] = [];
+  const upstreamHeaders: Array<HeadersInit | undefined> = [];
   const fetchImpl: typeof fetch = async (_input, init) => {
     upstreamBodies.push(JSON.parse(String(init?.body ?? "{}")));
+    upstreamHeaders.push(init?.headers);
     return new Response(
       JSON.stringify({
         id: "chatcmpl_compat",
@@ -137,6 +162,8 @@ test("translates responses-style input on /v1/chat/completions into upstream mes
       openAiBaseUrl: "http://openclaw.195440.com:3030",
       openAiApiKey: "test-key",
       stateTtlSeconds: 86400,
+      bodyLimitBytes: 20 * 1024 * 1024,
+      upstreamUserAgent: DEFAULT_UPSTREAM_USER_AGENT,
       logLevel: "silent",
     },
     store: new MemoryResponseStateStore(),
@@ -177,6 +204,7 @@ test("translates responses-style input on /v1/chat/completions into upstream mes
   assert.equal(upstream.messages[1]?.role, "user");
   assert.equal(upstream.user, "abc");
   assert.equal("input" in upstream, false);
+  assert.equal(getHeaderValue(upstreamHeaders[0], "user-agent"), DEFAULT_UPSTREAM_USER_AGENT);
 
   await app.close();
 });

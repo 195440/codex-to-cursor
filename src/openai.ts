@@ -5,6 +5,7 @@ import { ChatCompletionRequest } from "./types";
 export interface UpstreamClientOptions {
   baseUrl: string;
   fallbackApiKey?: string;
+  userAgent: string;
   fetchImpl?: typeof fetch;
   logger?: FastifyBaseLogger;
 }
@@ -12,12 +13,14 @@ export interface UpstreamClientOptions {
 export class OpenAiUpstreamClient {
   private readonly baseUrl: string;
   private readonly fallbackApiKey?: string;
+  private readonly userAgent: string;
   private readonly fetchImpl: typeof fetch;
   private readonly logger?: FastifyBaseLogger;
 
   constructor(options: UpstreamClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.fallbackApiKey = options.fallbackApiKey;
+    this.userAgent = options.userAgent;
     this.fetchImpl = options.fetchImpl ?? fetch;
     this.logger = options.logger;
   }
@@ -43,6 +46,7 @@ export class OpenAiUpstreamClient {
         headers: {
           authorization,
           "content-type": "application/json",
+          "user-agent": this.userAgent,
         },
         body: JSON.stringify(request),
       });

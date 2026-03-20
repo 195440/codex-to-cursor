@@ -26,6 +26,8 @@ async function main(): Promise<void> {
       port: config.port,
       upstreamBaseUrl: config.openAiBaseUrl,
       hasFallbackApiKey: Boolean(config.openAiApiKey),
+      bodyLimitBytes: config.bodyLimitBytes,
+      upstreamUserAgent: config.upstreamUserAgent,
     },
     "responses proxy listening",
   );
